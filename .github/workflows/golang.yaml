@@ -1,0 +1,22 @@
+name: Golang Action
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - master
+    create:
+      tags:
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    name: Run linters
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: make test
