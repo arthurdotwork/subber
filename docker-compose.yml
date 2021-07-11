@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+    pubsub:
+        image: markkrijgsman/pubsub
+        environment:
+            PUBSUB_PROJECT_ID: local-emulator-project
+        ports:
+            - 8112:8432
