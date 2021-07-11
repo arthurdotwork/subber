@@ -2,16 +2,17 @@ package pubsub
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"cloud.google.com/go/pubsub"
-	"google.golang.org/api/option"
+	"github.com/pterm/pterm"
 )
 
-func NewPubsubClient(ctx context.Context, projectId string) (*pubsub.Client, error) {
-	client, err := pubsub.NewClient(ctx, "local-emulator-project", option.WithCredentialsFile("{}"))
+func NewPubsubClient(ctx context.Context, projectId string, host string) (*pubsub.Client, error) {
+	os.Setenv("PUBSUB_EMULATOR_HOST", host)
+	client, err := pubsub.NewClient(ctx, "local-emulator-project")
 	if err != nil {
-		log.Fatal("Cannot start pubsub client :", err)
+		pterm.Error.Println("Cannot start pubsub client :", err)
 		return nil, err
 	}
 

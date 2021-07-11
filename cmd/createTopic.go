@@ -29,12 +29,15 @@ var createTopicCmd = &cobra.Command{
 		}
 
 		ctx := context.Background()
-		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")))
-		cobra.CheckErr(err)
-
-		_, err = client.CreateTopic(ctx, topicName)
+		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))
 		if err != nil {
-			pterm.Error.Printfln("Could not create topic %s. (%s)", topicName, err.Error())
+			pterm.Error.Println(err.Error())
+			return
+		}
+
+		pubSubService := service.NewPubSubService(client)
+		if err = pubSubService.CreateTopic(ctx, topicName); err != nil {
+			pterm.Error.Printfln("Cannot create topic %s. (%s)", topicName, err.Error())
 			return
 		}
 
