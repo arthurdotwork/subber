@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
 var rootCmd = &cobra.Command{
 	Use: "subber",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -39,10 +37,9 @@ func initConfig() {
 	viper.AutomaticEnv()
 	cobra.CheckErr(viper.ReadInConfig())
 
-	fmt.Println(viper.Get("PUBSUB_PROJECT_ID"))
-	fmt.Println(viper.Get("EMULATOR_HOST"))
-
 	checkConfig()
+	emulatorHost := fmt.Sprintf("%v", viper.Get("EMULATOR_HOST"))
+	os.Setenv("PUBSUB_EMULATOR_HOST", emulatorHost)
 }
 
 func checkConfigFile(cfgFile string) {
