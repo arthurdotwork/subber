@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/arthureichelberger/subber/pkg/pubsub"
+	"github.com/arthureichelberger/subber/service"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -13,7 +15,18 @@ import (
 var createTopicCmd = &cobra.Command{
 	Use: "createTopic",
 	Run: func(cmd *cobra.Command, args []string) {
-		topicName := args[0]
+		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
+			if len(value) == 0 {
+				return errors.New("topic name cannot be null")
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			pterm.Error.Println(err.Error())
+			return
+		}
 
 		ctx := context.Background()
 		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")))
@@ -21,13 +34,12 @@ var createTopicCmd = &cobra.Command{
 
 		_, err = client.CreateTopic(ctx, topicName)
 		if err != nil {
-			pterm.Error.Printfln("Could not create topic %s.", topicName)
+			pterm.Error.Printfln("Could not create topic %s. (%s)", topicName, err.Error())
 			return
 		}
 
-		pterm.Success.Printfln("Topic %s created.\n", topicName)
+		pterm.Success.Printfln("Topic %s created.", topicName)
 	},
-	Args: cobra.ExactArgs(1),
 }
 
 func init() {
