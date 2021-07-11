@@ -38,8 +38,6 @@ func initConfig() {
 	cobra.CheckErr(viper.ReadInConfig())
 
 	checkConfig()
-	emulatorHost := fmt.Sprintf("%v", viper.Get("EMULATOR_HOST"))
-	os.Setenv("PUBSUB_EMULATOR_HOST", emulatorHost)
 }
 
 func checkConfigFile(cfgFile string) {

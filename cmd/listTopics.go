@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/arthureichelberger/subber/pkg/pubsub"
+	"github.com/arthureichelberger/subber/service"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"google.golang.org/api/iterator"
 )
 
 // listTopicsCmd represents the listTopics command
@@ -16,17 +16,21 @@ var listTopicsCmd = &cobra.Command{
 	Use: "listTopics",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")))
-		cobra.CheckErr(err)
+		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))
+		if err != nil {
+			pterm.Error.Println(err.Error())
+		}
 
-		topics := client.Topics(ctx)
-		for {
-			topic, err := topics.Next()
-			if err == iterator.Done {
-				break
-			}
+		pubSubService := service.NewPubSubService(client)
+		topics, err := pubSubService.ListTopics(ctx)
 
-			pterm.Info.Printfln("Topic : %s.", topic.String())
+		if err != nil {
+			pterm.Error.Println(err.Error())
+			return
+		}
+
+		for _, topic := range topics {
+			pterm.Info.Printfln("Topic : %s.", topic)
 		}
 	},
 }

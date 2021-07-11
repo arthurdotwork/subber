@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	ps "cloud.google.com/go/pubsub"
 	"github.com/arthureichelberger/subber/pkg/pubsub"
 	"github.com/arthureichelberger/subber/service"
 	"github.com/pterm/pterm"
@@ -43,20 +42,15 @@ var createSubCmd = &cobra.Command{
 		}
 
 		ctx := context.Background()
-		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")))
-		cobra.CheckErr(err)
-
-		topic := client.Topic(topicName)
-		if ok, err := topic.Exists(ctx); !ok || err != nil {
-			pterm.Error.Printfln("Could not get topic %s.", topicName)
+		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))
+		if err != nil {
+			pterm.Error.Println(err.Error())
 			return
 		}
 
-		_, err = client.CreateSubscription(ctx, subName, ps.SubscriptionConfig{
-			Topic: topic,
-		})
-		if err != nil {
-			pterm.Error.Printfln("Could not create subscription %s. (%s)", subName, err.Error())
+		pubSubService := service.NewPubSubService(client)
+		if err = pubSubService.CreateSub(ctx, subName, topicName); err != nil {
+			pterm.Error.Printfln("Cannot create sub %s. (%s)", subName, err.Error())
 			return
 		}
 
