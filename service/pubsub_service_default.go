@@ -127,3 +127,39 @@ func (ps PubSubService) Publish(ctx context.Context, topicName string, payload s
 
 	return nil
 }
+
+func (ps PubSubService) ReadSubInteractive(ctx context.Context, subName string, channel chan model.Message, ackChan chan bool, maxMessages uint) error {
+	sub := ps.Client.Subscription(subName)
+	if ok, err := sub.Exists(ctx); !ok || err != nil {
+		return errors.New("subscription does not exist")
+	}
+
+	var mu sync.Mutex
+	received := 0
+	cctx, cancel := context.WithCancel(ctx)
+	err := sub.Receive(cctx, func(ctx context.Context, msg *pubsub.Message) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		channel <- model.Message{Message: msg.Data, Attributes: msg.Attributes, Id: uint(received + 1)}
+		shouldAck := <-ackChan
+		if shouldAck {
+			msg.Ack()
+			ackChan <- true
+		} else {
+			msg.Nack()
+			ackChan <- false
+		}
+
+		received++
+		if received == int(maxMessages) {
+			cancel()
+		}
+	})
+
+	if err != nil {
+		return fmt.Errorf("receive: %v", err)
+	}
+
+	return nil
+}
