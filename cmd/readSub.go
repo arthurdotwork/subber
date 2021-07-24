@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var maxMessages uint
+
 // readSubCmd represents the readSub command
 var readSubCmd = &cobra.Command{
 	Use: "readSub",
@@ -37,7 +39,7 @@ var readSubCmd = &cobra.Command{
 		}
 
 		pubSubService := service.NewPubSubService(client)
-		if err = pubSubService.ReadSub(ctx, subName); err != nil {
+		if err = pubSubService.ReadSub(ctx, subName, maxMessages); err != nil {
 			pterm.Error.Printfln("Cannot read from subscription %s. (%s)", subName, err.Error())
 			return
 		}
@@ -46,4 +48,6 @@ var readSubCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(readSubCmd)
+
+	rootCmd.PersistentFlags().UintVar(&maxMessages, "maxMessages", 10, "Number of messages before stopping reception")
 }

@@ -54,10 +54,8 @@ func TestPubSubService(t *testing.T) {
 
 	t.Run("It should be able to retrieve messages from an existing Subscription.", func(t *testing.T) {
 		topic := client.Topic("subber")
-		for i := 0; i < 10; i++ {
-			_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
-		}
-		err := pubSubService.ReadSub(ctx, "subber")
+		_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
+		err := pubSubService.ReadSub(ctx, "subber", 1)
 		assert.NoError(t, err)
 	})
 }

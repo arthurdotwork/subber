@@ -81,13 +81,12 @@ func (ps PubSubService) ListSubs(ctx context.Context) (map[string]string, error)
 	return subs, nil
 }
 
-func (ps PubSubService) ReadSub(ctx context.Context, subName string) error {
+func (ps PubSubService) ReadSub(ctx context.Context, subName string, maxMessages uint) error {
 	sub := ps.Client.Subscription(subName)
 	if ok, err := sub.Exists(ctx); !ok || err != nil {
 		return errors.New("subscription does not exist")
 	}
 
-	// Consume 10 messages.
 	var mu sync.Mutex
 	received := 0
 	cctx, cancel := context.WithCancel(ctx)
@@ -97,7 +96,7 @@ func (ps PubSubService) ReadSub(ctx context.Context, subName string) error {
 		pterm.Success.Printfln("Got message: %q", string(msg.Data))
 		msg.Ack()
 		received++
-		if received == 10 {
+		if received == int(maxMessages) {
 			cancel()
 		}
 	})
