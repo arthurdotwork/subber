@@ -3,8 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"sync"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/pterm/pterm"
 	"google.golang.org/api/iterator"
 )
 
@@ -76,4 +79,51 @@ func (ps PubSubService) ListSubs(ctx context.Context) (map[string]string, error)
 	}
 
 	return subs, nil
+}
+
+func (ps PubSubService) ReadSub(ctx context.Context, subName string) error {
+	sub := ps.Client.Subscription(subName)
+	if ok, err := sub.Exists(ctx); !ok || err != nil {
+		return errors.New("subscription does not exist")
+	}
+
+	// Consume 10 messages.
+	var mu sync.Mutex
+	received := 0
+	cctx, cancel := context.WithCancel(ctx)
+	err := sub.Receive(cctx, func(ctx context.Context, msg *pubsub.Message) {
+		mu.Lock()
+		defer mu.Unlock()
+		pterm.Success.Printfln("Got message: %q", string(msg.Data))
+		msg.Ack()
+		received++
+		if received == 10 {
+			cancel()
+		}
+	})
+
+	if err != nil {
+		return fmt.Errorf("receive: %v", err)
+	}
+
+	return nil
+}
+
+func (ps PubSubService) Publish(ctx context.Context, topicName string, payload string) error {
+	topic := ps.Client.Topic(topicName)
+	ok, err := topic.Exists(ctx)
+
+	if !ok || err != nil {
+		return fmt.Errorf("topic %s does not exist", topicName)
+	}
+	result := topic.Publish(ctx, &pubsub.Message{
+		Data: []byte(payload),
+	})
+
+	_, err = result.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("could not publish message in topic. (%s)", err.Error())
+	}
+
+	return nil
 }

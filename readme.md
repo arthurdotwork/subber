@@ -18,3 +18,6 @@ Subber is a golang CLI tool that interacts with a PubSub local emulator.
 
 ### **List all subscriptions.**
 `subber listSubs`
+
+### **Read messages from subscription**
+`subber readSub`

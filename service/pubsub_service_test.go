@@ -51,4 +51,13 @@ func TestPubSubService(t *testing.T) {
 		assert.Equal(t, 1, len(subs))
 		assert.Equal(t, "projects/project/topics/subber", subs["projects/project/subscriptions/subber"])
 	})
+
+	t.Run("It should be able to retrieve messages from an existing Subscription.", func(t *testing.T) {
+		topic := client.Topic("subber")
+		for i := 0; i < 10; i++ {
+			_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
+		}
+		err := pubSubService.ReadSub(ctx, "subber")
+		assert.NoError(t, err)
+	})
 }
