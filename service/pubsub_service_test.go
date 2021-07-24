@@ -57,7 +57,21 @@ func TestPubSubService(t *testing.T) {
 		topic := client.Topic("subber")
 		_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
 		c := make(chan model.Message)
-		err := pubSubService.ReadSub(ctx, "subber", c, 1)
-		assert.NoError(t, err)
+		maxMessages := uint(1)
+		go func() {
+			err := pubSubService.ReadSub(ctx, "subber", c, maxMessages)
+			assert.NoError(t, err)
+		}()
+
+		for {
+			msg := <-c
+			assert.Equal(t, "arthur", string(msg.Message))
+			assert.Equal(t, maxMessages, msg.Id)
+
+			if msg.Id == maxMessages {
+				close(c)
+				return
+			}
+		}
 	})
 }
