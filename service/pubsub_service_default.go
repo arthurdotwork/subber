@@ -81,34 +81,6 @@ func (ps PubSubService) ListSubs(ctx context.Context) (map[string]string, error)
 	return subs, nil
 }
 
-func (ps PubSubService) ReadSub(ctx context.Context, subName string, channel chan model.Message, maxMessages uint) error {
-	sub := ps.Client.Subscription(subName)
-	if ok, err := sub.Exists(ctx); !ok || err != nil {
-		return errors.New("subscription does not exist")
-	}
-
-	var mu sync.Mutex
-	received := 0
-	cctx, cancel := context.WithCancel(ctx)
-	err := sub.Receive(cctx, func(ctx context.Context, msg *pubsub.Message) {
-		mu.Lock()
-		defer mu.Unlock()
-
-		channel <- model.Message{Message: msg.Data, Attributes: msg.Attributes, Id: uint(received + 1)}
-		msg.Ack()
-		received++
-		if received == int(maxMessages) {
-			cancel()
-		}
-	})
-
-	if err != nil {
-		return fmt.Errorf("receive: %v", err)
-	}
-
-	return nil
-}
-
 func (ps PubSubService) Publish(ctx context.Context, topicName string, payload string) error {
 	topic := ps.Client.Topic(topicName)
 	ok, err := topic.Exists(ctx)
@@ -123,6 +95,66 @@ func (ps PubSubService) Publish(ctx context.Context, topicName string, payload s
 	_, err = result.Get(ctx)
 	if err != nil {
 		return fmt.Errorf("could not publish message in topic. (%s)", err.Error())
+	}
+
+	return nil
+}
+
+func (ps PubSubService) ReadSub(ctx context.Context, subName string, channel chan model.Message, maxMessages uint) error {
+	var mu sync.Mutex
+	received := 0
+	cctx, cancel := context.WithCancel(ctx)
+	return ps.read(cctx, subName, func(ctx context.Context, msg *pubsub.Message) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		channel <- model.Message{Message: msg.Data, Attributes: msg.Attributes, Id: uint(received + 1)}
+		msg.Ack()
+		received++
+		if received == int(maxMessages) {
+			cancel()
+		}
+	})
+}
+
+func (ps PubSubService) ReadSubInteractive(ctx context.Context, subName string, channel chan model.Message, ackChan chan bool, maxMessages uint) error {
+	var mu sync.Mutex
+	received := 0
+	cctx, cancel := context.WithCancel(ctx)
+
+	return ps.read(cctx, subName, func(ctx context.Context, msg *pubsub.Message) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		channel <- model.Message{Message: msg.Data, Attributes: msg.Attributes, Id: uint(received + 1)}
+		shouldAck := <-ackChan
+		if shouldAck {
+			msg.Ack()
+			ackChan <- true
+		} else {
+			msg.Nack()
+			ackChan <- false
+		}
+
+		received++
+		if received == int(maxMessages) {
+			cancel()
+		}
+	})
+}
+
+type PubSubMessageHandler func(ctx context.Context, message *pubsub.Message)
+
+func (ps PubSubService) read(ctx context.Context, subName string, handler PubSubMessageHandler) error {
+	sub := ps.Client.Subscription(subName)
+	if ok, err := sub.Exists(ctx); !ok || err != nil {
+		return errors.New("subscription does not exist")
+	}
+
+	err := sub.Receive(ctx, handler)
+
+	if err != nil {
+		return fmt.Errorf("receive: %v", err)
 	}
 
 	return nil

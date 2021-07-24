@@ -12,5 +12,6 @@ type PubSubServiceInterface interface {
 	ListTopics(ctx context.Context) ([]string, error)
 	ListSubs(ctx context.Context) (map[string]string, error)
 	ReadSub(ctx context.Context, subName string, channel chan model.Message, maxMessages uint) error
+	ReadSubInteractive(ctx context.Context, subName string, channel chan model.Message, ackChan chan bool, maxMessages uint) error
 	Publish(ctx context.Context, topicName string, payload string) error
 }
