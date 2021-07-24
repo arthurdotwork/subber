@@ -53,9 +53,12 @@ func TestPubSubService(t *testing.T) {
 		assert.Equal(t, "projects/project/topics/subber", subs["projects/project/subscriptions/subber"])
 	})
 
-	t.Run("It should be able to retrieve messages from an existing Subscription.", func(t *testing.T) {
+	t.Run("It should be able to publish a message in an existing Topic.", func(t *testing.T) {
 		topic := client.Topic("subber")
 		_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
+	})
+
+	t.Run("It should be able to retrieve messages from an existing Subscription.", func(t *testing.T) {
 		c := make(chan model.Message)
 		maxMessages := uint(1)
 		go func() {
