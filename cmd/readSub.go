@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/arthureichelberger/subber/model"
 	"github.com/arthureichelberger/subber/pkg/pubsub"
 	"github.com/arthureichelberger/subber/service"
 	"github.com/pterm/pterm"
@@ -39,9 +40,24 @@ var readSubCmd = &cobra.Command{
 		}
 
 		pubSubService := service.NewPubSubService(client)
-		if err = pubSubService.ReadSub(ctx, subName, maxMessages); err != nil {
-			pterm.Error.Printfln("Cannot read from subscription %s. (%s)", subName, err.Error())
-			return
+
+		channel := make(chan model.Message)
+
+		go func() {
+			if err = pubSubService.ReadSub(ctx, subName, channel, maxMessages); err != nil {
+				pterm.Error.Printfln("Cannot read from subscription %s. (%s)", subName, err.Error())
+				return
+			}
+		}()
+
+		for {
+			msg := <-channel
+			pterm.Success.Printfln("Received message : %s. (%d/%d)", string(msg.Message), msg.Id, maxMessages)
+
+			if msg.Id == maxMessages {
+				close(channel)
+				return
+			}
 		}
 	},
 }

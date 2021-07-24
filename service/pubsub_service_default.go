@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/pterm/pterm"
+	"github.com/arthureichelberger/subber/model"
 	"google.golang.org/api/iterator"
 )
 
@@ -81,7 +81,7 @@ func (ps PubSubService) ListSubs(ctx context.Context) (map[string]string, error)
 	return subs, nil
 }
 
-func (ps PubSubService) ReadSub(ctx context.Context, subName string, maxMessages uint) error {
+func (ps PubSubService) ReadSub(ctx context.Context, subName string, channel chan model.Message, maxMessages uint) error {
 	sub := ps.Client.Subscription(subName)
 	if ok, err := sub.Exists(ctx); !ok || err != nil {
 		return errors.New("subscription does not exist")
@@ -93,7 +93,8 @@ func (ps PubSubService) ReadSub(ctx context.Context, subName string, maxMessages
 	err := sub.Receive(cctx, func(ctx context.Context, msg *pubsub.Message) {
 		mu.Lock()
 		defer mu.Unlock()
-		pterm.Success.Printfln("Got message: %q", string(msg.Data))
+
+		channel <- model.Message{Message: msg.Data, Attributes: msg.Attributes, Id: uint(received + 1)}
 		msg.Ack()
 		received++
 		if received == int(maxMessages) {

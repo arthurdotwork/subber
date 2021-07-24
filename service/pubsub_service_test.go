@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/pubsub/pstest"
+	"github.com/arthureichelberger/subber/model"
 	"github.com/arthureichelberger/subber/service"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/option"
@@ -55,7 +56,8 @@ func TestPubSubService(t *testing.T) {
 	t.Run("It should be able to retrieve messages from an existing Subscription.", func(t *testing.T) {
 		topic := client.Topic("subber")
 		_ = pubSubService.Publish(ctx, topic.ID(), "arthur")
-		err := pubSubService.ReadSub(ctx, "subber", 1)
+		c := make(chan model.Message)
+		err := pubSubService.ReadSub(ctx, "subber", c, 1)
 		assert.NoError(t, err)
 	})
 }
