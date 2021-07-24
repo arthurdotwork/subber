@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var stdinPayload string
+
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
 	Use: "publish",
@@ -29,6 +31,24 @@ var publishCmd = &cobra.Command{
 			return
 		}
 
+		var payload string
+		if stdinPayload == "" {
+			payload, err = service.NewPrompt("Please enter your payload", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("payload cannot be null")
+				}
+
+				return nil
+			})
+		} else {
+			payload = stdinPayload
+		}
+
+		if err != nil {
+			pterm.Error.Println(err.Error())
+			return
+		}
+
 		ctx := context.Background()
 		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))
 		if err != nil {
@@ -37,7 +57,7 @@ var publishCmd = &cobra.Command{
 		}
 
 		pubSubService := service.NewPubSubService(client)
-		if err = pubSubService.Publish(ctx, topicName, "arthur"); err != nil {
+		if err = pubSubService.Publish(ctx, topicName, payload); err != nil {
 			pterm.Error.Println(err.Error())
 			return
 		}
@@ -48,4 +68,6 @@ var publishCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(publishCmd)
+
+	rootCmd.PersistentFlags().StringVar(&stdinPayload, "payload", "", "Payload")
 }

@@ -21,3 +21,9 @@ Subber is a golang CLI tool that interacts with a PubSub local emulator.
 
 ### **Read messages from subscription**
 `subber readSub`
+
+### **Publish a message in a topuc**
+`subber publish`
+
+You can also pass a payload argument in case you'd like to cat a JSON file directly like this:
+`subber publish --payload="$(cat file.json)"`
