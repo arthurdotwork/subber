@@ -13,7 +13,8 @@ import (
 
 // listTopicsCmd represents the listTopics command
 var listTopicsCmd = &cobra.Command{
-	Use: "listTopics",
+	Use:   "listTopics",
+	Short: "listTopics allows to list all topics available on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/arthureichelberger/subber/service"
@@ -12,9 +11,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "subber",
+	Use:   "subber",
+	Short: "Subber is a CLI tool to interact with a pubsub local emulator",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Usage")
+		_ = cmd.Help()
 	},
 }
 
@@ -51,7 +51,7 @@ func checkConfig() {
 	if viper.Get("PUBSUB_PROJECT_ID") == nil {
 		pubsubProjectId, err := service.NewPrompt("Pubsub Project ID", func(value string) error {
 			if len(value) == 0 {
-				return errors.New("Pubsub Project ID cannot be null")
+				return errors.New("pubsub Project ID cannot be null")
 			}
 
 			return nil
@@ -67,7 +67,7 @@ func checkConfig() {
 	if viper.Get("EMULATOR_HOST") == nil {
 		pubsubProjectId, err := service.NewPrompt("Emulator Host", func(value string) error {
 			if len(value) == 0 {
-				return errors.New("Emulator Host cannot be null")
+				return errors.New("emulator Host cannot be null")
 			}
 
 			return nil

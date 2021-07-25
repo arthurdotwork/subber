@@ -12,33 +12,49 @@ import (
 	"github.com/spf13/viper"
 )
 
+var createSubNameOption string
+var createSubTopicNameOption string
+
 var createSubCmd = &cobra.Command{
-	Use: "createSub",
+	Use:   "createSub",
+	Short: "createTopics allows to create a subscription on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
-		subName, err := service.NewPrompt("Please enter the subscriptionName", func(value string) error {
-			if len(value) == 0 {
-				return errors.New("sub name cannot be null")
+		var subName string
+		var err error
+
+		if createSubNameOption == "" {
+			subName, err = service.NewPrompt("Please enter the subscriptionName", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("sub name cannot be null")
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				pterm.Error.Println(err.Error())
+				return
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			pterm.Error.Println(err.Error())
-			return
+		} else {
+			subName = createSubNameOption
 		}
 
-		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
-			if len(value) == 0 {
-				return errors.New("topic name cannot be null")
+		var topicName string
+		if createSubTopicNameOption == "" {
+			topicName, err = service.NewPrompt("Please enter the topicName", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("topic name cannot be null")
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				pterm.Error.Println(err.Error())
+				return
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			pterm.Error.Println(err.Error())
-			return
+		} else {
+			topicName = createSubTopicNameOption
 		}
 
 		ctx := context.Background()
@@ -60,4 +76,7 @@ var createSubCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createSubCmd)
+
+	createSubCmd.Flags().StringVar(&createSubNameOption, "sub", "", "The name of the subscription you want to create")
+	createSubCmd.Flags().StringVar(&createSubTopicNameOption, "topic", "", "The name of the topic you want your subscription to listen to")
 }

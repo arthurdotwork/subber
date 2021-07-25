@@ -15,22 +15,31 @@ import (
 
 var maxMessages uint
 var interactively bool
+var readSubName string
 
 // readSubCmd represents the readSub command
 var readSubCmd = &cobra.Command{
-	Use: "readSub",
+	Use:   "readSub",
+	Short: "readSub allows to read messages in a subscription.",
 	Run: func(cmd *cobra.Command, args []string) {
-		subName, err := service.NewPrompt("Please enter a subscriptionName", func(value string) error {
-			if len(value) == 0 {
-				return errors.New("sub name cannot be null")
+		var subName string
+		var err error
+
+		if readSubName == "" {
+			subName, err = service.NewPrompt("Please enter a subscriptionName", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("sub name cannot be null")
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				pterm.Error.Println(err.Error())
+				return
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			pterm.Error.Println(err.Error())
-			return
+		} else {
+			subName = readSubName
 		}
 
 		ctx := context.Background()
@@ -53,8 +62,9 @@ var readSubCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(readSubCmd)
 
-	rootCmd.PersistentFlags().UintVar(&maxMessages, "maxMessages", 10, "Number of messages before stopping reception")
-	rootCmd.PersistentFlags().BoolVar(&interactively, "interactively", false, "Whether or not you want to ack messages interactively")
+	readSubCmd.Flags().UintVar(&maxMessages, "maxMessages", 10, "Number of messages before stopping reception")
+	readSubCmd.Flags().BoolVar(&interactively, "interactively", false, "Whether or not you want to ack messages interactively")
+	readSubCmd.Flags().StringVar(&readSubName, "sub", "", "The name of the sub from which you want to read messages")
 }
 
 func read(ctx context.Context, pubSubService service.PubSubServiceInterface, subName string) {

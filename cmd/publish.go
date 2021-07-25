@@ -13,22 +13,30 @@ import (
 )
 
 var stdinPayload string
+var publishTopicNameOption string
 
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
-	Use: "publish",
+	Use:   "publish",
+	Short: "publish allows to publish message in a topic.",
 	Run: func(cmd *cobra.Command, args []string) {
-		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
-			if len(value) == 0 {
-				return errors.New("topic name cannot be null")
+		var topicName string
+		var err error
+		if publishTopicNameOption == "" {
+			topicName, err = service.NewPrompt("Please enter the topicName", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("topic name cannot be null")
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				pterm.Error.Println(err.Error())
+				return
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			pterm.Error.Println(err.Error())
-			return
+		} else {
+			topicName = publishTopicNameOption
 		}
 
 		var payload string
@@ -69,5 +77,6 @@ var publishCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(publishCmd)
 
-	rootCmd.PersistentFlags().StringVar(&stdinPayload, "payload", "", "Payload")
+	publishCmd.Flags().StringVar(&stdinPayload, "payload", "", "Payload that will be published in the message data")
+	publishCmd.Flags().StringVar(&publishTopicNameOption, "topic", "", "The topic in which you want your message to be sent")
 }
