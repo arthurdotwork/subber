@@ -13,7 +13,8 @@ import (
 )
 
 var createTopicCmd = &cobra.Command{
-	Use: "createTopic",
+	Use:   "createTopic",
+	Short: "createTopics allows to create a topic on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
 		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
 			if len(value) == 0 {

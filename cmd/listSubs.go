@@ -13,7 +13,8 @@ import (
 
 // listSubsCmd represents the listSubs command
 var listSubsCmd = &cobra.Command{
-	Use: "listSubs",
+	Use:   "listSubs",
+	Short: "listSubs allows to list all subscriptions available on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		client, err := pubsub.NewPubsubClient(ctx, fmt.Sprintf("%v", viper.Get("PUBSUB_PROJECT_ID")), fmt.Sprintf("%v", viper.Get("EMULATOR_HOST")))

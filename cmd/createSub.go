@@ -13,7 +13,8 @@ import (
 )
 
 var createSubCmd = &cobra.Command{
-	Use: "createSub",
+	Use:   "createSub",
+	Short: "createTopics allows to create a subscription on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
 		subName, err := service.NewPrompt("Please enter the subscriptionName", func(value string) error {
 			if len(value) == 0 {

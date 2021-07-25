@@ -16,7 +16,8 @@ var stdinPayload string
 
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
-	Use: "publish",
+	Use:   "publish",
+	Short: "publish allows to publish message in a topic.",
 	Run: func(cmd *cobra.Command, args []string) {
 		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
 			if len(value) == 0 {
@@ -69,5 +70,5 @@ var publishCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(publishCmd)
 
-	rootCmd.PersistentFlags().StringVar(&stdinPayload, "payload", "", "Payload")
+	publishCmd.LocalFlags().StringVar(&stdinPayload, "payload", "", "Payload")
 }
