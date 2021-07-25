@@ -12,21 +12,29 @@ import (
 	"github.com/spf13/viper"
 )
 
+var createTopicNameOption string
+
 var createTopicCmd = &cobra.Command{
 	Use:   "createTopic",
 	Short: "createTopics allows to create a topic on the emulator.",
 	Run: func(cmd *cobra.Command, args []string) {
-		topicName, err := service.NewPrompt("Please enter the topicName", func(value string) error {
-			if len(value) == 0 {
-				return errors.New("topic name cannot be null")
+		var topicName string
+		var err error
+		if createTopicNameOption == "" {
+			topicName, err = service.NewPrompt("Please enter the topicName", func(value string) error {
+				if len(value) == 0 {
+					return errors.New("topic name cannot be null")
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				pterm.Error.Println(err.Error())
+				return
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			pterm.Error.Println(err.Error())
-			return
+		} else {
+			topicName = createTopicNameOption
 		}
 
 		ctx := context.Background()
@@ -48,4 +56,6 @@ var createTopicCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createTopicCmd)
+
+	createTopicCmd.Flags().StringVar(&createTopicNameOption, "topic", "", "The name of the topic you want to create")
 }

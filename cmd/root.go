@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 	Use:   "subber",
 	Short: "Subber is a CLI tool to interact with a pubsub local emulator",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 
